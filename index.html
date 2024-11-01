@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Charging Wave</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1"></script>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+        }
+
+        header {
+            background-color: #2C3E50;
+            width: 100%;
+            padding: 10px 0;
+            text-align: center;
+            color: white;
+            font-size: 24px;
+        }
+
+        #intro, #animation, #timePage, #effectPage, #solutionPage, #effectsPage {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            height: 100vh;
+            margin-top: 20px;
+        }
+
+        .button-container {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .button {
+            background-color: #ffffff;
+            color: #0077b6;
+            border: 2px solid #0077b6;
+            padding: 10px 20px;
+            font-size: 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+            .button:hover {
+                background-color: #0077b6;
+                color: white;
+            }
+
+        img {
+            width: 900%;
+            max-width: 1800px;
+            margin-top: 20px;
+            border-radius: 10px;
+        }
+
+        .container {
+            display: flex;
+            position: relative;
+            width: 800px;
+            height: 300px;
+            background-image: url('https://i.imgur.com/skEQKRc.png');
+            background-size: cover;
+            background-position: center;
+            border: 2px solid #0077b6;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+
+        .charging-area {
+            flex: 1;
+            position: relative;
+        }
+
+        .parking-area {
+            width: 150px;
+            background-color: rgba(240, 240, 240, 0.9);
+            border-left: 2px solid #0077b6;
+            padding-top: 20px;
+            text-align: center;
+        }
+
+        .charging-station {
+            position: absolute;
+            top: 50%;
+            left: 150px;
+            transform: translateY(-50%);
+            width: 100px;
+            height: 150px;
+            background-color: #0077b6;
+            border-radius: 5px;
+            text-align: center;
+            color: white;
+            padding: 10px;
+        }
+
+        .ship {
+            position: absolute;
+            width: 80px;
+            height: 40px;
+            background-size: cover;
+        }
+
+        .parking-spot {
+            width: 100px;
+            height: 40px;
+            background-color: transparent;
+            border: 1px dashed #0077b6;
+            margin: 10px auto;
+        }
+
+        .phone {
+            position: relative;
+            width: 500px;
+            height: 600px;
+            background-image: url('https://i.imgur.com/x2LNT8z.png');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .notification {
+            display: none;
+            background-color: rgba(0, 0, 0, 0.8);
+            border-radius: 10px;
+            padding: 5px 10px;
+            width: 30%;
+            text-align: center;
+            color: white;
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+
+        table {
+            width: 80%;
+            margin: auto;
+            border-collapse: collapse;
+        }
+
+        table, th, td {
+            border: 1px solid #0077b6;
+            padding: 10px;
+            text-align: center;
+        }
+
+        th {
+            background-color: #0077b6;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 헤더 -->
+    <header>Charging Wave</header>
+
+    <!-- 첫 번째 화면 -->
+    <div id="intro" style="display: flex;">
+        <div class="button-container">
+            <button class="button" onclick="showSolution()">문제점 & 기대효과</button>
+            <button class="button" onclick="showEffectsPage()">시뮬레이션</button>
+            <button class="button" onclick="showAnimation()">GPS 모델링</button>
+            <button class="button" onclick="showTimePage()">시간로그</button>
+        </div>
+        <img src="https://i.imgur.com/HpLDFHZ.jpeg" alt="Charging Wave Image">
+    </div>
+
+    <!-- 두 번째 화면 (애니메이션) -->
+    <div id="animation">
+        <button class="button" onclick="goBackToIntro()">이전</button>
+        <div class="container">
+            <div class="charging-area">
+                <div class="charging-station">충전 스테이션</div>
+            </div>
+            <div class="parking-area">
+                <h4>주차 구역</h4>
+                <div id="parkingSpot1" class="parking-spot"></div>
+                <div id="parkingSpot2" class="parking-spot"></div>
+                <div id="parkingSpot3" class="parking-spot"></div>
+            </div>
+        </div>
+
+        <div class="phone">
+            <div id="notification" class="notification">
+                충전 완료! <br>
+                <button class="button" onclick="parkShip()">주차</button>
+            </div>
+            <button id="departButton" onclick="departShips()">출항</button>
+        </div>
+    </div>
+
+    <!-- 세 번째 화면 (시간 정보 표시) -->
+    <div id="timePage">
+        <button class="button" onclick="goBackToIntro()">이전</button>
+        <h2>충전 및 주차 시간</h2>
+        <table id="timeTable">
+            <tr>
+                <th>배 ID</th>
+                <th>충전 완료 시간</th>
+                <th>주차 완료 시간</th>
+            </tr>
+        </table>
+    </div>
+
+    <!-- 네 번째 화면 (누적효과 이미지 표시) -->
+    <div id="effectPage">
+        <button class="button" onclick="goBackToIntro()">이전</button>
+        <h2>누적효과</h2>
+        <img id="effectImage" src="이미지_파일_경로.jpg" alt="누적효과 이미지">
+    </div>
+
+    <!-- 다섯 번째 화면 (문제점 및 해결방안 이미지 표시) -->
+    <div id="solutionPage">
+        <button class="button" onclick="goBackToIntro()">이전</button>
+        <h2>문제점 및 해결방안</h2>
+        <img src="https://i.imgur.com/DPIuBKl.png" alt="문제점 이미지">
+        <img src="https://i.imgur.com/vCiDWg0.png" alt="해결방안 이미지">
+    </div>
+
+    <!-- 여섯 번째 화면 (요청한 시뮬레이션 페이지) -->
+    <div id="effectsPage">
+        <button class="button" onclick="goBackToIntro()">이전</button>
+        <h1>출항된 척수 추적</h1>
+
+        <div class="section">
+            <div class="section-title">기본 설정</div>
+            <div id="controls">
+                <div class="control-group">
+                    <label for="batteryCapacity">선박의 배터리 용량 (kWh):</label>
+                    <input type="number" id="batteryCapacity" value="50000" min="1"> kWh
+                </div>
+                <div class="control-group">
+                    <label for="chargingSpeed">충전 속도 (kW):</label>
+                    <input type="number" id="chargingSpeed" value="1400" min="1"> kW
+                </div>
+                <div class="control-group">
+                    <label for="initialCharge">초기 충전 상태 (%):</label>
+                    <input type="number" id="initialCharge" value="30" min="0" max="100"> %
+                </div>
+                <div class="control-group">
+                    <label for="numChargers">충전기의 갯수:</label>
+                    <input type="number" id="numChargers" value="2" min="1"> 개
+                </div>
+                <div class="control-group">
+                    <label for="shipsPerDay">하루당 들어오는 전기 선박의 개수:</label>
+                    <input type="number" id="shipsPerDay" value="30" min="1"> 척
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">수동 관련 설정</div>
+            <div id="controls">
+                <div class="control-group">
+                    <label for="manualDepartureMin">수동 출항 최소 시간 (분):</label>
+                    <input type="number" id="manualDepartureMin" value="15" min="1"> 분
+                </div>
+                <div class="control-group">
+                    <label for="manualDepartureMax">수동 출항 최대 시간 (분):</label>
+                    <input type="number" id="manualDepartureMax" value="30" min="1"> 분
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">자율 관련 설정</div>
+            <div id="controls">
+                <div class="control-group">
+                    <label for="autonomousDepartureMin">자율 출항 최소 시간 (분):</label>
+                    <input type="number" id="autonomousDepartureMin" value="10" min="1"> 분
+                </div>
+                <div class="control-group">
+                    <label for="autonomousDepartureMax">자율 출항 최대 시간 (분):</label>
+                    <input type="number" id="autonomousDepartureMax" value="15" min="1"> 분
+                </div>
+                <div class="control-group">
+                    <label for="maintenanceTime">하루당 점검 시간 (분):</label>
+                    <input type="number" id="maintenanceTime" value="30" min="0"> 분
+                </div>
+            </div>
+        </div>
+
+        <button onclick="runSimulation()">시뮬레이션 실행</button>
+
+        <div class="chart-container">
+            <canvas id="sailingChart" width="400" height="200"></canvas>
+        </div>
+
+        <div class="chart-container">
+            <canvas id="barChart" width="400" height="200"></canvas>
+        </div>
+
+        <div class="chart-container">
+            <canvas id="pieChart" width="400" height="200"></canvas>
+        </div>
+
+        <div id="resultsTable"></div>
+
+    </div>
+
+    <script>
+        let isChargingActive = false;
+
+        function showAnimation() {
+            document.getElementById("intro").style.display = "none";
+            document.getElementById("animation").style.display = "flex";
+            if (!isChargingActive) {
+                isChargingActive = true;
+                setTimeout(chargingCycle, 100);
+            }
+        }
+
+        function showTimePage() {
+            document.getElementById("intro").style.display = "none";
+            document.getElementById("timePage").style.display = "block";
+            populateTimeTable();
+        }
+
+        function showEffectPage() {
+            document.getElementById("intro").style.display = "none";
+            document.getElementById("effectPage").style.display = "flex";
+        }
+
+        function showSolution() {
+            document.getElementById("intro").style.display = "none";
+            document.getElementById("solutionPage").style.display = "flex";
+        }
+
+        function showEffectsPage() {
+            document.getElementById("intro").style.display = "none";
+            document.getElementById("effectsPage").style.display = "flex";
+        }
+
+        function goBackToIntro() {
+            document.getElementById("intro").style.display = "flex";
+            document.getElementById("animation").style.display = "none";
+            document.getElementById("timePage").style.display = "none";
+            document.getElementById("effectPage").style.display = "none";
+            document.getElementById("solutionPage").style.display = "none";
+            document.getElementById("effectsPage").style.display = "none";
+        }
+
+        const chargingStationX = 150;
+        const chargingStationY = 125;
+        const parkingSpots = [
+            document.getElementById("parkingSpot1"),
+            document.getElementById("parkingSpot2"),
+            document.getElementById("parkingSpot3")
+        ];
+        const shipImages = [
+            'https://i.imgur.com/TpT2sGs.png',
+            'https://i.imgur.com/GYyI05o.png',
+            'https://i.imgur.com/JAyM303.png'
+        ];
+
+        let parkedShips = [];
+        let shipCounter = 1;
+        let currentShip = null;
+        let timesData = [];
+
+        function createShip() {
+            const ship = document.createElement("div");
+            ship.className = "ship";
+            ship.style.left = "-100px";
+            ship.style.top = "0px";
+            ship.style.backgroundImage = `url(${shipImages[Math.floor(Math.random() * shipImages.length)]})`;
+            ship.dataset.id = shipCounter++;
+            document.querySelector(".charging-area").appendChild(ship);
+            return ship;
+        }
+
+        function moveShip(ship, startX, endX, startY, endY, callback) {
+            let positionX = startX;
+            let positionY = startY;
+            const stepX = (endX - startX) / 50;
+            const stepY = (endY - startY) / 50;
+            ship.style.left = positionX + "px";
+            ship.style.top = positionY + "px";
+
+            let interval = setInterval(() => {
+                if (Math.abs(positionX - endX) > Math.abs(stepX) || Math.abs(positionY - endY) > Math.abs(stepY)) {
+                    positionX += stepX;
+                    positionY += stepY;
+                    ship.style.left = positionX + "px";
+                    ship.style.top = positionY + "px";
+                } else {
+                    ship.style.left = endX + "px";
+                    ship.style.top = endY + "px";
+                    clearInterval(interval);
+                    if (callback) callback();
+                }
+            }, 20);
+        }
+
+        function chargingCycle() {
+            currentShip = createShip();
+            const chargeTime = new Date().toLocaleTimeString();
+            moveShip(currentShip, -100, chargingStationX, 0, chargingStationY, () => {
+                setTimeout(() => document.getElementById("notification").style.display = "block", 1000);
+                currentShip.chargeTime = chargeTime;
+            });
+        }
+
+        function parkShip() {
+            document.getElementById("notification").style.display = "none";
+            const parkingSpot = parkingSpots[parkedShips.length];
+            const parkTime = new Date().toLocaleTimeString();
+            parkedShips.push(currentShip);
+
+            moveShip(currentShip, chargingStationX, 600, chargingStationY, parkingSpot.offsetTop + 20, () => {
+                currentShip.style.position = "static";
+                parkingSpot.appendChild(currentShip);
+
+                timesData.push({
+                    id: currentShip.dataset.id,
+                    chargeTime: currentShip.chargeTime,
+                    parkTime: parkTime
+                });
+
+                if (parkedShips.length < 3) {
+                    chargingCycle();
+                } else {
+                    isChargingActive = false;
+                }
+            });
+        }
+
+        function populateTimeTable() {
+            const table = document.getElementById("timeTable");
+            table.innerHTML = `<tr><th>배 ID</th><th>충전 완료 시간</th><th>주차 완료 시간</th></tr>`;
+            timesData.forEach((data) => {
+                const row = table.insertRow();
+                row.insertCell(0).textContent = `배 ${data.id}`;
+                row.insertCell(1).textContent = data.chargeTime;
+                row.insertCell(2).textContent = data.parkTime;
+            });
+        }
+
+        function departShips() {
+            parkedShips.forEach((ship, index) => {
+                const startX = parkingSpots[index].offsetLeft + 600;
+                const startY = parkingSpots[index].offsetTop + 20;
+                moveShip(ship, startX, startX + 300, startY, startY, () => ship.remove());
+            });
+            parkedShips = [];
+            setTimeout(chargingCycle, 2000);
+        }
+
+        function runSimulation() {
+            // 시뮬레이션 초기화 및 데이터 설정
+            document.getElementById('resultsTable').innerHTML = '';
+            Chart.helpers.each(Chart.instances, function (instance) {
+                instance.destroy();
+            });
+
+            const batteryCapacity = parseInt(document.getElementById('batteryCapacity').value);
+            const chargingSpeed = parseInt(document.getElementById('chargingSpeed').value);
+            const initialCharge = parseInt(document.getElementById('initialCharge').value);
+            const numChargers = parseInt(document.getElementById('numChargers').value);
+            const shipsPerDay = parseInt(document.getElementById('shipsPerDay').value);
+            const manualDepartureMin = parseInt(document.getElementById('manualDepartureMin').value);
+            const manualDepartureMax = parseInt(document.getElementById('manualDepartureMax').value);
+            const autonomousDepartureMin = parseInt(document.getElementById('autonomousDepartureMin').value);
+            const autonomousDepartureMax = parseInt(document.getElementById('autonomousDepartureMax').value);
+            const maintenanceTime = parseInt(document.getElementById('maintenanceTime').value);
+
+            const days = [];
+            const autonomousDepartures = [];
+            const manualDepartures = [];
+            let cumulativeAutonomous = 0;
+            let cumulativeManual = 0;
+
+            for (let i = 1; i <= 7; i++) {
+                days.push(i);
+                const chargeTimeHours = ((batteryCapacity * (100 - initialCharge) / 100) / (chargingSpeed * numChargers));
+                const chargeTimeMinutes = chargeTimeHours * 60;
+                const availableTimeForDeparture = chargeTimeMinutes - maintenanceTime;
+
+                let autonomousDeparturesToday = 0;
+                let currentAutonomousDepartureTime = 0;
+
+                if (availableTimeForDeparture > 0) {
+                    while (currentAutonomousDepartureTime + autonomousDepartureMin <= availableTimeForDeparture) {
+                        const randomAutonomousTime = Math.floor(Math.random() * (autonomousDepartureMax - autonomousDepartureMin + 1)) + autonomousDepartureMin;
+                        if (currentAutonomousDepartureTime + randomAutonomousTime > availableTimeForDeparture) break;
+                        currentAutonomousDepartureTime += randomAutonomousTime;
+                        autonomousDeparturesToday++;
+                    }
+                    cumulativeAutonomous += autonomousDeparturesToday;
+                    autonomousDepartures.push(cumulativeAutonomous);
+                } else {
+                    autonomousDepartures.push(cumulativeAutonomous);
+                }
+
+                let manualDeparturesToday = 0;
+                let currentManualDepartureTime = 0;
+
+                while (currentManualDepartureTime + manualDepartureMin <= availableTimeForDeparture) {
+                    const randomManualTime = Math.floor(Math.random() * (manualDepartureMax - manualDepartureMin + 1)) + manualDepartureMin;
+                    if (currentManualDepartureTime + randomManualTime > availableTimeForDeparture) break;
+                    currentManualDepartureTime += randomManualTime;
+                    manualDeparturesToday++;
+                }
+                cumulativeManual += manualDeparturesToday;
+                manualDepartures.push(cumulativeManual);
+            }
+
+            renderChart(days, autonomousDepartures, manualDepartures);
+            renderBarChart(cumulativeAutonomous, cumulativeManual);
+            renderPieChart(cumulativeAutonomous, cumulativeManual);
+            renderResultsTable(days, autonomousDepartures, manualDepartures);
+        }
+
+        function renderChart(days, autonomousDepartures, manualDepartures) {
+            const ctx = document.getElementById('sailingChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: days,
+                    datasets: [
+                        {
+                            label: '자율 출항 수',
+                            data: autonomousDepartures,
+                            borderColor: 'blue',
+                            borderWidth: 2,
+                            fill: false,
+                        },
+                        {
+                            label: '수동 출항 수',
+                            data: manualDepartures,
+                            borderColor: 'red',
+                            borderWidth: 2,
+                            fill: false,
+                        }
+                    ]
+                },
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderBarChart(cumulativeAutonomous, cumulativeManual) {
+            const ctx = document.getElementById('barChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['자율 출항', '수동 출항'],
+                    datasets: [{
+                        label: '누적 출항 수',
+                        data: [cumulativeAutonomous, cumulativeManual],
+                        backgroundColor: ['blue', 'red']
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderPieChart(cumulativeAutonomous, cumulativeManual) {
+            const ctx = document.getElementById('pieChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: ['자율 출항', '수동 출항'],
+                    datasets: [{
+                        data: [cumulativeAutonomous, cumulativeManual],
+                        backgroundColor: ['blue', 'red']
+                    }]
+                }
+            });
+        }
+
+        function renderResultsTable(days, autonomousDepartures, manualDepartures) {
+            const table = document.createElement('table');
+            const headerRow = document.createElement('tr');
+            const dayHeader = document.createElement('th');
+            dayHeader.innerText = '일';
+            const autonomousHeader = document.createElement('th');
+            autonomousHeader.innerText = '자율 출항 수';
+            const manualHeader = document.createElement('th');
+            manualHeader.innerText = '수동 출항 수';
+            headerRow.appendChild(dayHeader);
+            headerRow.appendChild(autonomousHeader);
+            headerRow.appendChild(manualHeader);
+            table.appendChild(headerRow);
+
+            for (let i = 0; i < days.length; i++) {
+                const row = document.createElement('tr');
+                const dayCell = document.createElement('td');
+                dayCell.innerText = days[i];
+                const autonomousCell = document.createElement('td');
+                autonomousCell.innerText = autonomousDepartures[i];
+                const manualCell = document.createElement('td');
+                manualCell.innerText = manualDepartures[i];
+                row.appendChild(dayCell);
+                row.appendChild(autonomousCell);
+                row.appendChild(manualCell);
+                table.appendChild(row);
+            }
+
+            document.getElementById('resultsTable').appendChild(table);
+        }
+    </script>
+</body>
+</html>
